@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gudang App - Arga</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <!-- ✅ AUTH SCREEN (LOGIN / REGISTER) -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <h2 style="margin:0;">Login Gudang</h2>
+      <div class="hint" style="margin-top:6px;">Kelola stok barang masuk & keluar dengan mudah.</div>
+
+      <div class="auth-tabs">
+        <button id="tabLogin" class="tab active" type="button">Login</button>
+        <button id="tabRegister" class="tab" type="button">Register</button>
+      </div>
+
+      <!-- REGISTER EXTRA -->
+      <div id="registerExtra" style="display:none;">
+        <div class="field">
+          <label>Nama</label>
+          <input id="regName" type="text" placeholder="Nama pengguna" />
+        </div>
+
+        <div class="field">
+          <label>Lokasi Gedung</label>
+          <select id="regWarehouse">
+            <option value="gedung_ab">Gedung A&B</option>
+            <option value="gedung_cdm">Gedung CDM</option>
+            <option value="gedung_thamrin">Gedung Thamrin</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Role</label>
+          <select id="regRole">
+            <option value="viewer">Viewer</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div class="hint">Viewer hanya lihat stok. Admin bisa input/import/export.</div>
+        </div>
+
+        <div class="field" id="adminCodeWrap" style="display:none;">
+          <label>Kode Admin</label>
+          <input id="regAdminCode" type="text" placeholder="Masukkan kode admin" />
+          <div class="hint">Jika kode salah → otomatis jadi viewer.</div>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="field">
+        <label>Email / Username</label>
+        <input id="authUser" type="text" placeholder="contoh: arga@gmail.com / superadmin" />
+      </div>
+
+      <!-- ✅ SUPERADMIN WAREHOUSE PICK -->
+      <div class="field" id="superAdminWarehouseWrap" style="display:none;">
+        <label>Gedung (SuperAdmin)</label>
+        <select id="superAdminWarehouse">
+          <option value="gedung_ab">Gedung A&B</option>
+          <option value="gedung_cdm">Gedung CDM</option>
+          <option value="gedung_thamrin">Gedung Thamrin</option>
+        </select>
+        <div class="hint">Khusus SuperAdmin: pilih gudang yang mau kamu kelola.</div>
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="field">
+        <label>Password</label>
+        <input id="authPass" type="password" placeholder="Password" />
+      </div>
+
+      <!-- CONFIRM PASSWORD -->
+      <div class="field" id="confirmWrap" style="display:none;">
+        <label>Konfirmasi Password</label>
+        <input id="authPass2" type="password" placeholder="Ulangi password" />
+      </div>
+
+      <div class="auth-actions">
+        <button id="togglePassBtn" type="button">👁️</button>
+        <button id="authActionBtn" type="button">Login</button>
+      </div>
+
+      <button id="resetAccountBtn" class="ghost" type="button">Reset info akun</button>
+
+      <div id="authHint" class="hint">Silakan login untuk masuk aplikasi.</div>
+    </div>
+  </div>
+  <!-- ✅ END AUTH SCREEN -->
+
+
+  <!-- ✅ APP HEADER -->
+  <header class="topbar">
+    <div class="top-left">
+      <div class="avatar" id="avatar">A</div>
+      <div class="who">
+        <div class="name" id="userName">User</div>
+        <div class="sub" id="warehouseName">-</div>
+      </div>
+    </div>
+
+    <div class="top-right">
+  <div class="low-badge" id="lowStockBadge" style="display:none;">
+    ⚠️ <b id="lowStockBadgeCount">0</b> low
+  </div>
+
+  <button id="themeBtn" class="btn-theme" type="button">🌙</button>
+
+  <button id="logoutBtn" class="btn-logout" type="button">Logout</button>
+</div>
+  </header>
+
+
+  <!-- ✅ MAIN CONTENT -->
+  <main class="app">
+
+    <!-- HOME -->
+    <section id="page-home" class="page active">
+      <h3>Home</h3>
+
+      <!-- ✅ RINGKASAN -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Ringkasan</div>
+            <div class="panel-sub">Info cepat kondisi gudang</div>
+          </div>
+
+          <button class="mini-btn" id="toggleSummaryBtn" type="button">Lihat</button>
+        </div>
+
+        <div id="summaryBox" class="collapse-box">
+          <div class="grid-cards">
+            <div class="card">
+              <div class="card-title">Total Item</div>
+              <div class="card-value" id="totalItems">0</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Total Stok</div>
+              <div class="card-value" id="totalStock">0</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Transaksi Hari Ini</div>
+              <div class="card-value" id="todayTx">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ INFO BARANG LOW -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Info Barang Habis / Hampir Habis</div>
+            <div class="panel-sub" id="lowStockHint">-</div>
+          </div>
+
+          <button class="mini-btn" id="toggleLowStockBtn" type="button">Lihat</button>
+        </div>
+
+        <div id="lowStockBox" class="collapse-box">
+          <div id="lowStockList" class="list"></div>
+        </div>
+      </div>
+
+      <!-- ✅ RIWAYAT TRANSAKSI -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Riwayat Transaksi</div>
+            <div class="panel-sub">25 transaksi terakhir</div>
+          </div>
+
+          <button class="mini-btn" id="toggleTxBtn" type="button">Lihat</button>
+        </div>
+
+        <div id="txBox" class="collapse-box">
+          <div class="grid-2">
+            <div class="field">
+              <label>Filter Tanggal</label>
+              <input id="txFilterDate" type="date" />
+            </div>
+
+            <div class="field">
+              <label>Export Laporan</label>
+              <button id="exportTxTextBtn" type="button">Export Text</button>
+            </div>
+          </div>
+
+          <textarea id="txTextOutput" rows="6" placeholder="Hasil export transaksi akan tampil di sini..."></textarea>
+
+          <button id="copyTxTextBtn" type="button" class="ghost2" style="margin-top:8px;">Copy</button>
+          <div id="txFilterHint" class="hint">-</div>
+
+          <div id="txList" class="list" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- BARANG KELUAR -->
+    <section id="page-out" class="page">
+      <h3>Barang Keluar</h3>
+
+      <div class="panel">
+        <div class="field">
+          <label>Nama Barang</label>
+          <select id="outItemSelect"></select>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Stok Saat Ini</label>
+            <input id="outCurrentStock" type="text" readonly value="-" />
+          </div>
+          <div class="field">
+            <label>Sisa Stok</label>
+            <input id="outRemainingStock" type="text" readonly value="-" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Nama Penerima</label>
+          <input id="outReceiver" type="text" placeholder="Nama penerima" />
+        </div>
+
+        <div class="field">
+          <label>Jumlah Keluar</label>
+          <input id="outQty" type="number" min="1" placeholder="Jumlah" />
+        </div>
+
+        <div class="field">
+          <label>Catatan</label>
+          <input id="outNote" type="text" placeholder="Opsional" />
+        </div>
+
+        <div class="actions">
+          <button id="outSubmit" type="button">Simpan Keluar</button>
+          <button id="outClear" type="button" class="ghost2">Reset</button>
+        </div>
+
+        <div id="outHint" class="hint">-</div>
+      </div>
+    </section>
+
+
+    <!-- BARANG MASUK -->
+    <section id="page-in" class="page">
+      <h3>Barang Masuk</h3>
+
+      <div class="panel">
+        <div class="field">
+          <label>Nama Barang</label>
+          <select id="inItemSelect"></select>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Stok Saat Ini</label>
+            <input id="inCurrentStock" type="text" readonly value="-" />
+          </div>
+          <div class="field">
+            <label>Stok Setelah Masuk</label>
+            <input id="inAfterStock" type="text" readonly value="-" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Jumlah Masuk</label>
+          <input id="inQty" type="number" min="1" placeholder="Jumlah" />
+        </div>
+
+        <div class="field">
+          <label>Tanggal Masuk</label>
+          <input id="inDate" type="date" />
+        </div>
+
+        <div class="field">
+          <label>Catatan</label>
+          <input id="inNote" type="text" placeholder="Opsional" />
+        </div>
+
+        <div class="actions">
+          <button id="inSubmit" type="button">Simpan Masuk</button>
+          <button id="inClear" type="button" class="ghost2">Reset</button>
+        </div>
+
+        <div id="inHint" class="hint">-</div>
+      </div>
+    </section>
+
+
+    <!-- STOCK OPNAME -->
+    <section id="page-opname" class="page">
+      <h3>Stock Opname</h3>
+
+      <div class="panel">
+        <div class="grid-2">
+          <div class="field">
+            <label>Cari Barang</label>
+            <input id="opnameSearch" type="text" placeholder="Cari..." />
+          </div>
+
+          <div class="field">
+            <label>Filter</label>
+            <select id="opnameFilter">
+              <option value="available">Tersedia</option>
+              <option value="low">Hampir habis</option>
+              <option value="zero">Habis</option>
+              <option value="all">Semua</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hint" id="opnameSummary">-</div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Barang</th>
+                <th>Stock</th>
+                <th>Satuan</th>
+              </tr>
+            </thead>
+            <tbody id="opnameTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TOOLS -->
+    <section id="page-tools" class="page">
+      <h3>Tools</h3>
+
+      <div class="panel">
+        <div class="actions">
+          <button id="openAllDrawersBtn" type="button">Buka Semua</button>
+          <button id="closeAllDrawersBtn" type="button" class="ghost2">Tutup Semua</button>
+        </div>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div class="drawer">
+        <button class="drawer-head" type="button">🟢 Admin Panel (Online)</button>
+        <div class="drawer-body">
+          <div class="actions">
+            <button id="refreshAdminPanelBtn" type="button">Refresh</button>
+          </div>
+
+          <div class="hint" id="adminPanelHint">-</div>
+          <div id="onlineList" class="list"></div>
+        </div>
+      </div>
+
+      <!-- IMPORT -->
+      <div class="drawer">
+        <button class="drawer-head" type="button">📥 Import Stock (CSV)</button>
+        <div class="drawer-body">
+          <div class="field">
+            <label>File CSV (Format: nama,qty,unit)</label>
+            <input id="importFile" type="file" accept=".csv" />
+          </div>
+
+          <div class="field">
+            <label>Mode Import</label>
+            <select id="importMode">
+              <option value="append">Tambah (Append)</option>
+              <option value="replace">Ganti Semua (Replace)</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <button id="importBtn" type="button">Import</button>
+          </div>
+
+          <div class="hint" id="importHint">-</div>
+        </div>
+      </div>
+
+      <!-- MANUAL ADD -->
+      <div class="drawer">
+        <button class="drawer-head" type="button">➕ Tambah Barang Manual</button>
+        <div class="drawer-body">
+          <div class="field">
+            <label>Nama Barang</label>
+            <input id="manualName" type="text" placeholder="Nama barang" />
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>Stock</label>
+              <input id="manualQty" type="number" min="0" placeholder="0" />
+            </div>
+            <div class="field">
+              <label>Satuan</label>
+              <input id="manualUnit" type="text" placeholder="karton / pcs / pack" value="karton" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Catatan</label>
+            <input id="manualNote" type="text" placeholder="Opsional" />
+          </div>
+
+          <div class="actions">
+            <button id="manualAddBtn" type="button">Tambah</button>
+          </div>
+
+          <div class="hint" id="manualAddHint">-</div>
+        </div>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="drawer">
+        <button class="drawer-head" type="button">📤 Export Data</button>
+        <div class="drawer-body">
+          <div class="actions">
+            <button id="exportStockBtn" type="button">Export Stock (JSON)</button>
+            <button id="exportTxBtn" type="button" class="ghost2">Export Transaksi (JSON)</button>
+          </div>
+
+          <div class="field">
+            <label>Output (copy manual)</label>
+            <textarea id="exportOutput" rows="8" placeholder="Hasil export akan tampil di sini..."></textarea>
+          </div>
+
+          <div class="actions">
+            <button id="copyExportBtn" type="button">Copy</button>
+            <button id="clearExportBtn" type="button" class="ghost2">Clear</button>
+          </div>
+
+          <div class="hint" id="exportHint">-</div>
+        </div>
+      </div>
+
+      <!-- WA REPORT -->
+      <div class="drawer">
+        <button class="drawer-head" type="button">🧾 Laporan Penerimaan (Copy WA)</button>
+        <div class="drawer-body">
+          <div class="field">
+            <label>Tanggal</label>
+            <input id="waReportDate" type="date" />
+          </div>
+
+          <div class="field">
+            <label>Keterangan</label>
+            <input id="waReportNote" type="text" placeholder="Dengan jumlah yang sesuai..." />
+          </div>
+
+          <div class="actions">
+            <button id="generateWaBtn" type="button">Generate</button>
+            <button id="copyWaBtn" type="button" class="ghost2">Copy</button>
+          </div>
+
+          <div class="field">
+            <label>Output</label>
+            <textarea id="waReportOutput" rows="8" placeholder="Laporan akan tampil di sini..."></textarea>
+          </div>
+
+          <div class="hint" id="waReportHint">-</div>
+        </div>
+      </div>
+
+      <!-- RESET -->
+      <div class="drawer danger">
+        <button class="drawer-head" type="button">⚠️ Reset Semua Data Gudang</button>
+        <div class="drawer-body">
+          <div class="actions">
+            <button id="resetAllBtn" type="button" class="danger-btn">RESET TOTAL</button>
+          </div>
+          <div class="hint" id="resetAllHint">Hati-hati, ini menghapus semua data gudang!</div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ✅ BOTTOM NAVBAR -->
+  <nav class="navbar">
+    <button class="nav-btn active" data-go="home" type="button">🏠<span>Home</span></button>
+    <button class="nav-btn admin-only" data-go="out" type="button">📤<span>Keluar</span></button>
+    <button class="nav-btn admin-only" data-go="in" type="button">📥<span>Masuk</span></button>
+    <button class="nav-btn" data-go="opname" type="button">📦<span>Opname</span></button>
+    <button class="nav-btn admin-only" data-go="tools" type="button">🛠️<span>Tools</span></button>
+  </nav>
+
+
+  <!-- ✅ PREMIUM MODAL LOGOUT -->
+  <div id="modalLogout" class="modal">
+    <div class="modal-card">
+      <div class="modal-title">Logout?</div>
+      <div class="modal-text">Kamu yakin mau keluar dari aplikasi?</div>
+
+      <div class="modal-actions">
+        <button id="cancelLogoutBtn" class="modal-btn modal-ghost" type="button">Batal</button>
+        <button id="confirmLogoutBtn" class="modal-btn danger" type="button">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
